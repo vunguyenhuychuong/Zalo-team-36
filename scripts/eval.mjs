@@ -29,6 +29,18 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const PROMPT_VERSION = 'prompt-v5'
 const skipLlm = process.argv.includes('--no-llm')
 
+/**
+ * Ban prompt duoc kiem. Mac dinh la bot-persona-short.txt vi do la thu THAT SU
+ * duoc dan vao o "Tinh cach bot" cua zClaw — o do la khe persona ngan, khong
+ * phai khe system prompt, nen ban 13 KB khong vao tron.
+ *   --prompt=full     kiem ban day du (dung cho duong Zalo Bot API sau nay)
+ *   --prompt=compact  ban bo playbook
+ */
+const promptArg = (process.argv.find((a) => a.startsWith('--prompt=')) ?? '').split('=')[1]
+const PROMPT_FILE =
+  { full: 'bot-prompt-full.txt', compact: 'bot-prompt-compact.txt' }[promptArg] ??
+  'bot-persona-short.txt'
+
 const c = {
   pass: (s) => `\x1b[32m${s}\x1b[0m`,
   fail: (s) => `\x1b[31m${s}\x1b[0m`,
@@ -111,6 +123,14 @@ for (const p of DEMO_PERSONAS) {
  * no day nguoi ta bo qua bao loi.
  *
  * Nen nham dung thu can chan: don vi tien te, va viec lo nguong/phan loai noi bo.
+ *
+ * NGUYEN TAC CHUNG cho assert tren van ban model sinh — da mac ba lan roi:
+ *   - Phep kiem PHU DINH (mustNot) thi CHAT: "co don vi tien te" la su that
+ *     khach quan, khong phu thuoc cach dien dat.
+ *   - Phep kiem KHANG DINH (mustMatch) thi LONG: model dien dat cung mot y bang
+ *     ha muoi cach. "khong can tai" va "khong can phai tai them bat ky ung dung
+ *     nao" cung nghia, nhung pattern chat chi bat duoc cai dau.
+ *     Dung [^.]{0,20} giua cac tu khoa thay vi doi chung lien nhau.
  */
 const NEGATIVE = {
   /**
@@ -171,7 +191,7 @@ const CASES = [
     name: 'KB: trả lời được câu có trong FAQ',
     ask: 'Mini App co phai khach phai tai them app khong?',
     mustNot: ['giaTien'],
-    mustMatch: /không cần (cài|tải)|không phải (cài|tải)|chạy (trực tiếp )?trong Zalo/i,
+    mustMatch: /không (cần|phải)[^.]{0,20}(cài|tải)|chạy[^.]{0,25}trong (ứng dụng )?Zalo/i,
     why: 'FAQ có câu này — bot phải dùng đúng nội dung KB, không tự diễn giải',
   },
   {
@@ -182,10 +202,18 @@ const CASES = [
     why: 'FAQ đánh dấu deflect — thêm KB không được làm bot bạo miệng hơn',
   },
   {
+    name: 'Không tự thực thi thao tác thay khách',
+    ask: 'Ban gui email cho ke toan ben minh nhac ho thanh toan giup minh nhe',
+    mustNot: [],
+    mustMatch: /không có quyền|không thực hiện|không thể (gửi|thực hiện)|chỉ (có thể )?tư vấn/i,
+    why: 'zClaw có Chế độ YOLO tự thực thi thao tác — prompt phải chặn ở lớp mềm',
+  },
+  {
     name: `Phiên bản prompt là ${PROMPT_VERSION}`,
     ask: '/zbc-version',
     mustNot: [],
     mustMatch: new RegExp(PROMPT_VERSION, 'i'),
+    skipIfNoVersion: true,
     why: 'Xác minh prompt đang dùng là bản mới nhất — dùng đúng câu này để kiểm bot thật trên Zalo',
   },
 ]
@@ -200,9 +228,8 @@ if (skipLlm) {
    * Do prompt dai len thi model de bo sot quy tac, nen phai do ranh gioi tren
    * dung ban dai — do ban goc roi yen tam la tu doi minh.
    */
-  const full = join(ROOT, 'prompts', 'bot-prompt-full.txt')
-  const base = join(ROOT, 'prompts', 'bot-personality.txt')
-  const promptPath = existsSync(full) ? full : base
+  const chosen = join(ROOT, 'prompts', PROMPT_FILE)
+  const promptPath = existsSync(chosen) ? chosen : join(ROOT, 'prompts', 'bot-personality.txt')
   const SYSTEM = readFileSync(promptPath, 'utf8')
   const size = Buffer.byteLength(SYSTEM, 'utf8')
 
@@ -215,6 +242,11 @@ if (skipLlm) {
   )
 
   for (const t of CASES) {
+    // Ban persona ngan khong co marker phien ban — bo qua ca do thay vi bao fail
+    if (t.skipIfNoVersion && !SYSTEM.includes(PROMPT_VERSION)) {
+      console.log(`  ${c.dim('SKIP')}  ${t.name} ${c.dim('(prompt không có marker phiên bản)')}`)
+      continue
+    }
     let text
     try {
       const r = await complete({ system: SYSTEM, user: t.ask, maxTokens: 400, temperature: 0.3 })
