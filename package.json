@@ -1,0 +1,21 @@
+{
+  "name": "zalo-copilot",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Zalo Business Copilot - AI agent tu van giai phap Zalo cho SME (Hackathon 2026)",
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "concurrently -n server,client -c magenta,cyan \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:client": "npm --workspace client run dev",
+    "dev:server": "npm --workspace server run dev -- --port 4000",
+    "build": "npm --workspace client run build",
+    "start": "npm --workspace server run start -- --port 4000",
+    "serve": "npm run build && npm run start"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}
