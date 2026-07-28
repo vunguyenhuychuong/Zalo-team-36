@@ -1,11 +1,17 @@
+// PHAI dat truoc moi import khac: auth.js doc process.env ngay luc no duoc
+// danh gia, va ESM danh gia import theo dung thu tu khai bao o day.
+import './env.js'
+
 import { existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import express from 'express'
 import cors from 'cors'
 import { analyze } from './scoring.js'
-import { addLead, listLeads, load, reset, toLead, transition } from './store.js'
+import { addLead, listLeads, load, reset, setOpeningLine, toLead, transition } from './store.js'
 import { HUMAN_STATUSES, TRANSITIONS } from './leadStatus.js'
+import { generateOpeningLine } from './openingLine.js'
+import { isConfigured as llmConfigured, modelName } from './llm.js'
 import { login, logout, requireInternal, sessionCount, usingDefaultPassword } from './auth.js'
 
 /**
@@ -266,6 +272,36 @@ app.post('/api/leads/:id/transition', requireInternal, (req, res) => {
   return ok(res, result.lead)
 })
 
+/**
+ * Sinh "cau mo dau goi y cho account" bang LLM.
+ *
+ * Day la CHO DUY NHAT trong app goi model. Phan cong ro rang:
+ *   rule engine tinh diem va chon giai phap  ->  model chi dien dat lai
+ *
+ * Sinh theo yeu cau chu khong tu dong luc tao lead: khong lam cham form SME,
+ * va account chu dong quyet dinh khi nao tieu token.
+ *
+ * Da co roi thi tra ban cu (khong goi lai model) tru khi ?regenerate=1.
+ */
+app.post('/api/leads/:id/opening-line', requireInternal, async (req, res) => {
+  const lead = listLeads().find((l) => l.id === req.params.id)
+  if (!lead) return fail(res, 404, 'Không tìm thấy lead.')
+
+  const regenerate = req.query.regenerate === '1' || req.body?.regenerate === true
+  if (lead.openingLine && !regenerate) {
+    return ok(res, { ...lead.openingLine, cached: true })
+  }
+
+  try {
+    const result = await generateOpeningLine(lead)
+    setOpeningLine(lead.id, result)
+    return ok(res, { ...result, cached: false })
+  } catch (e) {
+    console.error('[opening-line] lỗi:', e)
+    return fail(res, 500, 'Không sinh được câu mở đầu.')
+  }
+})
+
 /** Cho client biet nhan nut nao va y nghia tung trang thai. */
 app.get('/api/lead-statuses', requireInternal, (_req, res) =>
   ok(res, { statuses: HUMAN_STATUSES, transitions: TRANSITIONS }),
@@ -304,6 +340,11 @@ const server = app.listen(PORT, HOST, () => {
   else console.log('  Chưa có client/dist — chạy `npm run build` nếu muốn server phục vụ web luôn')
   console.log(`  Bind              ->  ${HOST}:${PORT}${HOST === '127.0.0.1' ? ' (chỉ trong máy)' : ' (mở ra ngoài)'}`)
   console.log(`  Đã nạp ${listLeads().length} lead`)
+  console.log(
+    llmConfigured()
+      ? `  LLM               ->  ${modelName()} (chỉ dùng cho câu mở đầu bàn giao)`
+      : '  LLM               ->  chưa cấu hình FPT_API_KEY, câu mở đầu sẽ dùng mẫu dựng sẵn',
+  )
   if (usingDefaultPassword) {
     console.log('  ⚠ Khu vực nội bộ đang dùng mật khẩu mặc định.')
     console.log('    Đặt INTERNAL_PASSWORD trong .env để đổi.')

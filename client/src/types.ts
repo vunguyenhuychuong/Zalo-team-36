@@ -141,6 +141,20 @@ export interface StatusChange {
   agentSaid: string | null
 }
 
+/**
+ * Cau mo dau goi y cho account — field cuoi trong ban ban giao.
+ * `source` cho biet do model viet hay roi ve mau dung san.
+ */
+export interface OpeningLine {
+  text: string
+  source: 'llm' | 'template'
+  /** Chi co khi source = 'template': vi sao khong dung duoc model */
+  reason?: string
+  model: string | null
+  tokens: number | null
+  cached?: boolean
+}
+
 export interface StatusConfig {
   statuses: Record<LeadStatus, StatusMeta>
   transitions: Record<LeadStatus, LeadStatus[]>
@@ -166,4 +180,6 @@ export interface Lead {
   /** Do account quyet dinh */
   status: LeadStatus
   history: StatusChange[]
+  /** null cho tới khi account bấm sinh */
+  openingLine: OpeningLine | null
 }

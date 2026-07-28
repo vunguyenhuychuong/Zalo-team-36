@@ -83,6 +83,18 @@ scp -i "$KEY" -P "$PORT" -o StrictHostKeyChecking=accept-new \
     "$TMP/app.tgz" "$USER@$HOST:$APP_DIR.new/app.tgz"
 $SSH "cd $APP_DIR.new && tar xzf app.tgz && rm app.tgz"
 
+# --- 4b. Day .env len (chmod 600) ----------------------------------------------
+# Server can FPT_API_KEY de sinh cau mo dau ban giao, va INTERNAL_PASSWORD cho
+# khu noi bo. Ghi qua stdin chu KHONG truyen qua tham so lenh: tham so lenh lo
+# ra trong `ps` va trong lich su shell.
+say "Đẩy .env lên VPS (chmod 600)"
+if [ -f "$ROOT/.env" ]; then
+  $SSH "cat > $APP_DIR.new/.env && chmod 600 $APP_DIR.new/.env" < "$ROOT/.env"
+  $SSH "echo '  đã ghi $(wc -l < "$ROOT/.env") dòng, quyền:' \$(stat -c %a $APP_DIR.new/.env)"
+else
+  echo "  Không có .env ở máy local — server sẽ dùng mật khẩu mặc định và mẫu dựng sẵn cho câu mở đầu"
+fi
+
 # --- 5. Cai dependency cua server ---------------------------------------------
 say "Cai dependency (chi express + cors, theo server/package.json)"
 $SSH "cd $APP_DIR.new/server && npm install --omit=dev --no-fund --no-audit 2>&1 | tail -3"
@@ -98,7 +110,8 @@ $SSH "
 say "Khoi dong app"
 $SSH "
   cd $APP_DIR
-  export INTERNAL_PASSWORD='$INTERNAL_PASSWORD'
+  # Khong truyen secret qua tham so lenh nua — server tu doc .env vua day len
+  # (server/src/env.js, import dau tien trong index.js).
   if command -v pm2 >/dev/null 2>&1; then
     pm2 delete zalo-copilot >/dev/null 2>&1 || true
     pm2 start server/src/index.js --name zalo-copilot --update-env -- --port $APP_PORT

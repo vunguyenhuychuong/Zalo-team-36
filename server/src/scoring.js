@@ -3,7 +3,8 @@ import { SOLUTIONS, useCasesFor } from './catalog.js'
 const clamp = (n, lo = 0, hi = 100) => Math.max(lo, Math.min(hi, Math.round(n)))
 const has = (arr, v) => Array.isArray(arr) && arr.includes(v)
 
-const INDUSTRY_NAME = {
+/** Export de openingLine.js dung lai, khong phai khai trung mot ban nua. */
+export const INDUSTRY_NAME = {
   fnb: 'F&B',
   retail: 'bán lẻ',
   beauty: 'làm đẹp',

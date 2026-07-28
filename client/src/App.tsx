@@ -149,7 +149,14 @@ export default function App() {
         )}
 
         {!needsLogin && view === 'advisorResult' && advisorRec && (
-          <AdvisorResult rec={advisorRec} onRestart={() => navigate('advisor')} />
+          <AdvisorResult
+            rec={advisorRec}
+            onRestart={() => navigate('advisor')}
+            onUnauthorized={() => {
+              setAuthed(false)
+              setPendingView('advisorResult')
+            }}
+          />
         )}
 
         {!needsLogin &&

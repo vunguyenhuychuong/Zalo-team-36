@@ -129,6 +129,13 @@ export function toLead(input, result, createdAt = new Date().toISOString(), sour
     topScore: top.score,
     qualification: result.qualification,
 
+    /**
+     * Cau mo dau goi y cho account — field cuoi trong ban ban giao cua tai lieu.
+     * Sinh theo yeu cau (khong tu dong luc tao lead) de khong lam cham form SME
+     * va de account chu dong quyet dinh khi nao tieu token.
+     */
+    openingLine: null,
+
     /** Trang thai do account quyet dinh. Agent luon ban giao o muc NEW. */
     status: DEFAULT_STATUS,
     /**
@@ -231,6 +238,15 @@ export function transition(id, to, note = '') {
 
   persist()
   return { ok: true, lead }
+}
+
+/** Gan cau mo dau da sinh vao lead va ghi xuong file. */
+export function setOpeningLine(id, openingLine) {
+  const lead = leads.find((l) => l.id === id)
+  if (!lead) return null
+  lead.openingLine = openingLine
+  persist()
+  return lead
 }
 
 /** Dung khi muon reset ve dung 3 lead mau truoc luc demo. */

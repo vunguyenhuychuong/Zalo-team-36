@@ -3,6 +3,7 @@ import type {
   InternalRecommendation,
   Lead,
   LeadStatus,
+  OpeningLine,
   Recommendation,
   StatusConfig,
 } from './types'
@@ -140,6 +141,18 @@ export const api = {
     return request<Lead>(
       `/leads/${id}/transition`,
       { method: 'POST', body: JSON.stringify({ to, note }) },
+      true,
+    )
+  },
+
+  /**
+   * Sinh câu mở đầu cho account. Đã có rồi thì trả bản cũ, không gọi lại model —
+   * truyền regenerate: true nếu muốn viết lại.
+   */
+  openingLine(id: string, regenerate = false) {
+    return request<OpeningLine>(
+      `/leads/${id}/opening-line`,
+      { method: 'POST', body: JSON.stringify({ regenerate }) },
       true,
     )
   },

@@ -3,6 +3,7 @@ import { UnauthorizedError, api } from '../api'
 import { COMPANY_SIZES, INDUSTRIES, REGIONS, labelOf } from '../data/options'
 import type { Lead, LeadStatus, StatusConfig } from '../types'
 import { IconAlert, IconCheck, IconChevronDown, IconInbox, IconLock } from '../components/icons'
+import { OpeningLineBox } from '../components/OpeningLineBox'
 
 /** Thu tu hien nut, khop voi vong doi trong tai lieu. */
 const STATUS_ORDER: LeadStatus[] = ['ACCEPTED', 'QUALIFIED', 'NURTURING', 'REJECTED']
@@ -262,6 +263,14 @@ export function LeadDashboard({ onUnauthorized }: { onUnauthorized: () => void }
                     <div className="action-note">
                       <b>Liên hệ</b>
                       {l.contactName} · {l.phone} · {l.email}
+                    </div>
+
+                    <div style={{ marginTop: 16 }}>
+                      <OpeningLineBox
+                        leadId={l.id}
+                        initial={l.openingLine}
+                        onUnauthorized={onUnauthorized}
+                      />
                     </div>
 
                     {/* ---- Quyet dinh cua account ---- */}

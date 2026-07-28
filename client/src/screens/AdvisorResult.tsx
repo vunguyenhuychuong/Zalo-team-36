@@ -1,5 +1,6 @@
 import type { InternalRecommendation } from '../types'
 import { Recommendation } from './Recommendation'
+import { OpeningLineBox } from '../components/OpeningLineBox'
 import { IconAlert, IconBack, IconCheck } from '../components/icons'
 
 /**
@@ -22,9 +23,11 @@ const QUESTION_FOR: Record<string, string> = {
 export function AdvisorResult({
   rec,
   onRestart,
+  onUnauthorized,
 }: {
   rec: InternalRecommendation
   onRestart: () => void
+  onUnauthorized: () => void
 }) {
   const q = rec.qualification
 
@@ -123,6 +126,14 @@ export function AdvisorResult({
                 </span>
               </div>
             )}
+
+            <div style={{ marginTop: 20 }}>
+              <OpeningLineBox
+                leadId={rec.id}
+                initial={null}
+                onUnauthorized={onUnauthorized}
+              />
+            </div>
 
             <div className="banner banner--info" style={{ marginTop: 20, marginBottom: 0 }}>
               <IconAlert size={16} />

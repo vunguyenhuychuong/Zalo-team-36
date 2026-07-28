@@ -1378,6 +1378,91 @@ select.control[data-empty='true'] {
   text-decoration-thickness: 1px;
 }
 
+/* Cau mo dau do LLM viet */
+.opening {
+  padding: 16px 18px;
+  border: 1.5px solid #d9e6ff;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--brand-tint-2) 0%, #fff 100%);
+}
+
+.opening__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.opening__src {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+}
+
+.opening__src--llm {
+  background: var(--brand);
+  color: #fff;
+}
+
+.opening__src--template {
+  background: var(--field);
+  color: var(--muted);
+}
+
+.opening__empty {
+  margin: 0 0 14px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.opening__text {
+  margin: 0;
+  padding: 14px 16px;
+  background: #fff;
+  border-left: 3px solid var(--brand);
+  border-radius: 0 10px 10px 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--ink);
+}
+
+.opening__reason {
+  margin: 10px 0 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--warn);
+}
+
+.opening__reason svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.opening__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.opening__meta {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted-2);
+  margin-left: auto;
+}
+
 /* Nhat ky chuyen trang thai */
 .hist {
   margin: 0;
