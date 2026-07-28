@@ -384,10 +384,51 @@ Giao diện đã responsive mobile-first vì sau này sẽ chạy trong webview 
 
 ---
 
+## LLM dùng ở đâu trong app
+
+**Đúng một chỗ:** sinh *"câu mở đầu gợi ý cho account"* — field cuối trong bản bàn giao của tài liệu.
+Toàn bộ phần còn lại của web app là rule engine tất định, không có model nào tham gia.
+
+Phân công rất rõ:
+
+| | Làm gì |
+|---|---|
+| Rule engine (`catalog.js`, `scoring.js`) | Tính điểm, phân loại, chọn giải pháp — **tất định** |
+| LLM (`llm.js`, `openingLine.js`) | Chỉ diễn đạt lại thành một câu người đọc được |
+
+```
+POST /api/leads/:id/opening-line     (cần đăng nhập)
+```
+
+Sinh **theo yêu cầu**, không tự động lúc tạo lead: không làm chậm form SME, và account chủ động
+quyết định khi nào tiêu token. Đã sinh rồi thì trả bản cũ, không gọi lại model — truyền
+`{"regenerate": true}` nếu muốn viết lại.
+
+### Ba lớp chặn để model không vượt ranh giới
+
+1. **Prompt** cấm mọi chữ số, cấm nhắc điểm qualification, cấm bịa thông tin ngoài dữ liệu được cấp
+2. **Kiểm ở code**: nếu output còn chứa chữ số thì loại và dùng mẫu dựng sẵn — Never List điều 5
+   không cho con số chi phí nào ra ngoài, và câu này là câu account đọc cho khách
+3. **Luôn có bản dự phòng**: chưa cấu hình key, key sai, model timeout hay trả nội dung rỗng đều rơi
+   về mẫu dựng sẵn kèm lý do. **Demo không bao giờ hiện lỗi ở chỗ này.**
+
+Đã kiểm cả ba đường dự phòng, và key không lọt vào thông báo lỗi (`maskKey` trong `llm.js`).
+
+### `.env` trên VPS
+
+Deploy script ghi `.env` sang VPS qua **stdin** với `chmod 600`, không truyền qua tham số lệnh —
+tham số lệnh lộ ra trong `ps` và lịch sử shell. Server đọc file đó bằng `server/src/env.js`, import
+đầu tiên trong `index.js` (phải vậy vì `auth.js` đọc `process.env` ngay lúc module được đánh giá).
+
+---
+
 ## Bot chat trên Zalo (zClaw / OpenClaw)
 
 Prompt của bot nằm ở [prompts/bot-personality.txt](prompts/bot-personality.txt) — dán nguyên file
 này vào ô **Tính cách bot** của zClaw.
+
+> ⚠ **File này không được app nào đọc.** Nó chỉ có hiệu lực khi có người copy-paste vào zClaw.
+> Sửa file xong mà chưa dán lại thì bot trên Zalo vẫn giữ prompt cũ. Kiểm lại trước mỗi lần demo.
 
 | Ô trong zClaw | Điền |
 |---|---|
@@ -420,11 +461,51 @@ nói hai con số khác nhau cho cùng một doanh nghiệp là lỗ hổng chí
 làm trước/sau; điểm phù hợp do web app tính và hiển thị. Prompt cũng được nhắc riêng về ngưỡng
 quy mô nhỏ để kết luận trùng với engine.
 
-Thử prompt trước khi dán vào app:
+Thử prompt qua 2 lượt hội thoại:
 
 ```bash
 bash scripts/test-bot-prompt.sh
 ```
+
+### Kiểm bot thật đang dùng prompt nào
+
+Prompt có nhúng phiên bản. Chat với bot trên Zalo:
+
+```
+/zbc-version
+```
+
+Bot trả `prompt-v4` là bản hiện tại đang live. Trả gì khác, hoặc không hiểu, là **bạn quên dán lại
+sau khi sửa file**. Kiểm trong 5 giây, làm trước mỗi lần demo.
+
+Đổi nội dung `bot-personality.txt` thì nhớ tăng số phiên bản ở **hai chỗ** trong file (dòng đầu và
+mục KIỂM PHIÊN BẢN) và ở `PROMPT_VERSION` trong `scripts/eval.mjs`.
+
+---
+
+## Eval — chạy một lệnh, biết ngay có làm hỏng gì
+
+```bash
+npm run eval             # cả hai phần
+npm run eval -- --no-llm # chỉ rule engine, không tốn token
+```
+
+Exit code khác 0 khi có ca fail, nên dùng được trong CI hoặc chạy trước demo.
+
+| Phần | Số ca | Assert gì |
+|---|---|---|
+| Rule engine | 8 hồ sơ | Phân loại, giải pháp đứng đầu, có bị chặn cổng không |
+| Ranh giới bot | 6 ca gọi model thật | Output không vượt Never List + phiên bản prompt |
+
+**Chỉ assert quyết định, không assert điểm chính xác.** Tinh chỉnh trọng số vài điểm là việc bình
+thường; đổi kết luận mới là việc đáng báo động. Mỗi ca có dòng `guards` ghi rõ nó đang bảo vệ điều
+gì — khi fail thì đọc dòng đó trước, nó cho biết nên sửa rule hay nên sửa kỳ vọng.
+
+**Phần ranh giới bot mong manh có chủ đích.** Assert trên văn bản model sinh là rào chắn chống hồi
+quy, không phải chứng minh đúng. Fail một lần thì chạy lại trước khi kết luận — `temperature` > 0
+làm kết quả biến động.
+
+Đã kiểm suite thật sự bắt được lỗi: bỏ sàn MQL đi thì ca `taphoa` fail kèm đúng lý do, exit code 1.
 
 ---
 

@@ -11,6 +11,69 @@
  *   - Co ho so gan nhu trong thong tin, de thay engine gan co thay vi doan
  */
 
+/**
+ * Ky vong cho eval (`npm run eval`). Tach rieng khoi ho so de xem duoc ca ma
+ * tran mot lan, va de thay ngay khi mot thay doi rule lam lech nhieu ca.
+ *
+ * Chi assert QUYET DINH (phan loai, giai phap dan dau, co bi chan cong khong),
+ * KHONG assert diem chinh xac. Ly do: tinh chinh trong so vai diem la viec binh
+ * thuong; doi ket luan moi la viec dang bao dong.
+ *
+ * `guards` ghi ro tung ca dang bao ve dieu gi — khi mot ca fail thi doc dong do
+ * truoc, no cho biet nen sua rule hay nen sua ky vong.
+ */
+export const EXPECTATIONS = {
+  cafe: {
+    classification: 'SQL_CANDIDATE',
+    topSolution: 'oa',
+    gateBlocked: false,
+    guards: 'Ca chuẩn: quán nhỏ cần chăm sóc khách → OA đứng đầu, đủ điều kiện bàn giao.',
+  },
+  thoitrang: {
+    classification: 'SQL_CANDIDATE',
+    topSolution: 'miniapp',
+    gateBlocked: false,
+    guards: 'Đã bán sàn và muốn giữ dữ liệu khách → Mini App phải thắng OA.',
+  },
+  nhakhoa: {
+    classification: 'SQL_CANDIDATE',
+    topSolution: 'oa',
+    gateBlocked: false,
+    guards: 'Ngành y tế cần nhắc lịch → OA đứng đầu, ZBS phải xếp cao (thứ 2).',
+  },
+  trungtam: {
+    classification: 'MQL',
+    topSolution: 'oa',
+    gateBlocked: true,
+    guards: 'Đủ điểm nhưng chỉ đang so sánh → phải bị chặn ở cổng SQL candidate.',
+  },
+  homestay: {
+    classification: 'MQL',
+    topSolution: 'miniapp',
+    gateBlocked: false,
+    guards: 'Cần khách tự giữ chỗ → Mini App đứng đầu dù quy mô rất nhỏ.',
+  },
+  daily: {
+    classification: 'SQL_CANDIDATE',
+    topSolution: 'miniapp',
+    gateBlocked: false,
+    guards: 'Đã có OA sẵn → OA phải bị trừ điểm và tụt xuống, Mini App lên đầu.',
+  },
+  taphoa: {
+    classification: 'LEAD',
+    topSolution: 'oa',
+    gateBlocked: false,
+    guards:
+      'Sàn cho MQL: 44 điểm nhưng vấn đề quá chung nên phải giữ ở Lead, không đẩy vào nurture.',
+  },
+  spa: {
+    classification: 'MQL',
+    topSolution: 'oa',
+    gateBlocked: true,
+    guards: 'Never List điều 10: 73 điểm vẫn không được lên SQL candidate khi chưa có hành động bán hàng.',
+  },
+}
+
 export const DEMO_PERSONAS = [
   {
     key: 'cafe',

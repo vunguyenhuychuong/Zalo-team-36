@@ -13,7 +13,9 @@
     "dev:server": "npm --workspace server run dev -- --port 4000",
     "build": "npm --workspace client run build",
     "start": "npm --workspace server run start -- --port 4000",
-    "serve": "npm run build && npm run start"
+    "serve": "npm run build && npm run start",
+    "eval": "node scripts/eval.mjs",
+    "typecheck": "npm --workspace client run build"
   },
   "devDependencies": {
     "concurrently": "^9.1.0"
