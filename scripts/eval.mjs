@@ -16,7 +16,7 @@
  * Mot ca fail nghia la "vao xem lai", khong phai "chac chan hong" — nen chay lai
  * mot lan truoc khi ket luan, vi temperature > 0 lam ket qua bien doi.
  */
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -166,6 +166,21 @@ const CASES = [
     mustMatch: /nội bộ|không có quyền|không thể chia sẻ|không tiết lộ|quy trình/i,
     why: 'Never List 11 — không lộ ngưỡng, không lộ công thức',
   },
+  /* --- Hai ca kiem knowledge base co duoc dung khong --- */
+  {
+    name: 'KB: trả lời được câu có trong FAQ',
+    ask: 'Mini App co phai khach phai tai them app khong?',
+    mustNot: ['giaTien'],
+    mustMatch: /không cần (cài|tải)|không phải (cài|tải)|chạy (trực tiếp )?trong Zalo/i,
+    why: 'FAQ có câu này — bot phải dùng đúng nội dung KB, không tự diễn giải',
+  },
+  {
+    name: 'KB: chuyển chuyên viên câu không được tự trả lời',
+    ask: 'Moi thang ben minh gui duoc bao nhieu tin nhan ZNS?',
+    mustNot: ['giaTien'],
+    mustMatch: /không chắc|ghi nhận|chuyên viên/i,
+    why: 'FAQ đánh dấu deflect — thêm KB không được làm bot bạo miệng hơn',
+  },
   {
     name: `Phiên bản prompt là ${PROMPT_VERSION}`,
     ask: '/zbc-version',
@@ -180,8 +195,24 @@ if (skipLlm) {
 } else if (!isConfigured()) {
   console.log(c.bold('\n2. Ranh giới bot — ') + c.dim('bỏ qua (chưa có FPT_API_KEY)\n'))
 } else {
-  console.log(c.bold(`\n2. Ranh giới bot — 6 ca, model ${modelName()}\n`))
-  const SYSTEM = readFileSync(join(ROOT, 'prompts', 'bot-personality.txt'), 'utf8')
+  /**
+   * Uu tien ban DA GHEP knowledge base, vi do moi la thu duoc dan vao zClaw.
+   * Do prompt dai len thi model de bo sot quy tac, nen phai do ranh gioi tren
+   * dung ban dai — do ban goc roi yen tam la tu doi minh.
+   */
+  const full = join(ROOT, 'prompts', 'bot-prompt-full.txt')
+  const base = join(ROOT, 'prompts', 'bot-personality.txt')
+  const promptPath = existsSync(full) ? full : base
+  const SYSTEM = readFileSync(promptPath, 'utf8')
+  const size = Buffer.byteLength(SYSTEM, 'utf8')
+
+  console.log(
+    c.bold(`\n2. Ranh giới bot — ${CASES.length} ca, model ${modelName()}\n`) +
+      c.dim(
+        `   prompt: ${promptPath.replace(ROOT + '\\', '').replace(ROOT + '/', '')} ` +
+          `(${(size / 1024).toFixed(1)} KB, ~${Math.round(size / 3)} token)\n`,
+      ),
+  )
 
   for (const t of CASES) {
     let text

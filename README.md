@@ -424,11 +424,51 @@ tham số lệnh lộ ra trong `ps` và lịch sử shell. Server đọc file đ
 
 ## Bot chat trên Zalo (zClaw / OpenClaw)
 
-Prompt của bot nằm ở [prompts/bot-personality.txt](prompts/bot-personality.txt) — dán nguyên file
-này vào ô **Tính cách bot** của zClaw.
+Prompt bot được ghép từ **hai file tách nhau**, rồi build ra file dán vào zClaw:
 
-> ⚠ **File này không được app nào đọc.** Nó chỉ có hiệu lực khi có người copy-paste vào zClaw.
-> Sửa file xong mà chưa dán lại thì bot trên Zalo vẫn giữ prompt cũ. Kiểm lại trước mỗi lần demo.
+```bash
+node scripts/build-bot-prompt.mjs
+```
+
+| File | Chứa gì | Sửa khi nào |
+|---|---|---|
+| [prompts/bot-personality.txt](prompts/bot-personality.txt) | Hành vi, giọng điệu, ranh giới Never List | Đổi cách bot xử sự |
+| [server/src/knowledgeBase.js](server/src/knowledgeBase.js) | FAQ + mô hình triển khai theo ngành | Thêm kiến thức |
+| `prompts/bot-prompt-full.txt` | **Bản ghép — dán file này vào zClaw** | Không sửa tay |
+
+Tách hai file vì trộn chung thì sửa kiến thức dễ làm hỏng ranh giới, và ngược lại.
+
+> ⚠ **Không file nào trong số này được app đọc.** Chúng chỉ có hiệu lực khi có người copy-paste bản
+> ghép vào zClaw. Sửa xong mà chưa dán lại thì bot trên Zalo vẫn giữ prompt cũ.
+
+### Knowledge base — nguyên tắc viết
+
+`knowledgeBase.js` có 9 FAQ trả lời được, 3 FAQ cố ý chuyển chuyên viên, và mô hình triển khai cho 7
+ngành. Ba quy tắc bắt buộc, ghi rõ trong đầu file:
+
+**Chỉ viết điều kiểm chứng được.** Mỗi mục có trường `nguon` trỏ về bảng portfolio trong tài liệu
+Define-Flow hoặc docs Zalo Bot Platform.
+
+**Không bịa số liệu, không bịa tên khách hàng.** Phần theo ngành là **mô tả mô hình điển hình**, không
+phải case study có kết quả. Một KB chứa *"quán X tăng 40% doanh thu"* còn tệ hơn không có KB: model
+sẽ nói lại con số đó với giọng chắc chắn, và không ai truy được nguồn.
+
+**Chưa chắc thì đánh dấu `deflect`** — bot nói không chắc và chuyển chuyên viên, thay vì đoán. Ba câu
+đang deflect: giá, giới hạn số tin theo gói, lộ trình tính năng.
+
+### Thêm KB có làm hỏng ranh giới không — đã đo
+
+Prompt dài làm model dễ bỏ sót quy tắc, nên đây là con số cần theo dõi, không phải càng nhiều KB
+càng tốt:
+
+| | Kích thước | Eval ranh giới |
+|---|---|---|
+| Chỉ hành vi | 1.697 token | 6/6 đạt |
+| Ghép cả KB | **4.225 token** (2,5×) | **8/8 đạt** |
+
+`npm run eval` tự đọc `bot-prompt-full.txt` nếu có — tức là đo trên đúng bản được dán vào zClaw, chứ
+không đo bản gốc rồi yên tâm là tự dối mình. Hai ca thêm vào kiểm KB thật sự được dùng: một câu phải
+trả lời được từ FAQ, một câu phải chuyển chuyên viên.
 
 | Ô trong zClaw | Điền |
 |---|---|
@@ -495,7 +535,7 @@ Exit code khác 0 khi có ca fail, nên dùng được trong CI hoặc chạy tr
 | Phần | Số ca | Assert gì |
 |---|---|---|
 | Rule engine | 8 hồ sơ | Phân loại, giải pháp đứng đầu, có bị chặn cổng không |
-| Ranh giới bot | 6 ca gọi model thật | Output không vượt Never List + phiên bản prompt |
+| Ranh giới bot | 8 ca gọi model thật | Không vượt Never List, KB được dùng, đúng phiên bản prompt |
 
 **Chỉ assert quyết định, không assert điểm chính xác.** Tinh chỉnh trọng số vài điểm là việc bình
 thường; đổi kết luận mới là việc đáng báo động. Mỗi ca có dòng `guards` ghi rõ nó đang bảo vệ điều
