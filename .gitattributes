@@ -1,0 +1,8 @@
+# Script shell BAT BUOC la LF.
+# Neu git chuyen sang CRLF khi checkout tren Windows, bash tren VPS Linux se bao
+# "\r: command not found" va deploy.sh chet ngay dong dau.
+*.sh text eol=lf
+*.mjs text eol=lf
+
+# Config nginx cung chay tren Linux
+*.conf text eol=lf

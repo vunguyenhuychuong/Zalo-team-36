@@ -1,0 +1,21 @@
+node_modules/
+dist/
+
+# Secrets - chan rong de khong lot file dat ten khac (key.env, fpt.env...)
+.env
+.env.*
+*.env
+!.env.example
+
+# Du lieu chay - lead do nguoi dung tao, khong phai source.
+# Dung `**/` vi pattern co dau `/` se bi git neo vao thu muc goc:
+# `data/leads.json` KHONG khop `server/data/leads.json`.
+**/data/leads.json
+
+# IDE
+.idea/
+.vscode/
+
+*.log
+.DS_Store
+.vite/
