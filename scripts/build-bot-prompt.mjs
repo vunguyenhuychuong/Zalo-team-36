@@ -21,7 +21,14 @@ import { FAQ, PLAYBOOKS } from '../server/src/knowledgeBase.js'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const BASE = join(ROOT, 'prompts', 'bot-personality.txt')
-const OUT = join(ROOT, 'prompts', 'bot-prompt-full.txt')
+
+/**
+ * `--compact` bo phan playbook theo nganh, giu ranh gioi va FAQ.
+ * Dung khi o "Tinh cach bot" cua zClaw co gioi han do dai va cat bot ban day.
+ * Dau hieu bi cat: dan xong ma chat /zbc-version khong tra ve dung phien ban.
+ */
+const compact = process.argv.includes('--compact')
+const OUT = join(ROOT, 'prompts', compact ? 'bot-prompt-compact.txt' : 'bot-prompt-full.txt')
 
 const base = readFileSync(BASE, 'utf8').trimEnd()
 
@@ -65,10 +72,7 @@ const composed = [
   '='.repeat(72),
   '',
   faqBlock,
-  '',
-  '-'.repeat(72),
-  '',
-  playbookBlock,
+  ...(compact ? [] : ['', '-'.repeat(72), '', playbookBlock]),
   '',
 ].join('\n')
 
@@ -81,11 +85,12 @@ console.log('')
 console.log(`  Prompt gốc      ${kb(Buffer.byteLength(base, 'utf8'))}`)
 console.log(
   `  + kiến thức     ${kb(Buffer.byteLength(composed, 'utf8') - Buffer.byteLength(base, 'utf8'))}` +
-    `   (${faqFact.length} FAQ trả lời được, ${faqDeflect.length} FAQ chuyển chuyên viên, ` +
-    `${Object.keys(PLAYBOOKS).length} ngành)`,
+    `   (${faqFact.length} FAQ trả lời được, ${faqDeflect.length} FAQ chuyển chuyên viên` +
+    (compact ? ', bỏ playbook)' : `, ${Object.keys(PLAYBOOKS).length} ngành)`),
 )
 console.log(`  = tổng          ${kb(Buffer.byteLength(composed, 'utf8'))}`)
 console.log('')
-console.log('  Dán FILE NÀY vào ô "Tính cách bot" của zClaw, không phải bot-personality.txt.')
+console.log(`  Dán FILE NÀY vào ô "Tính cách bot" của zClaw: prompts/${compact ? 'bot-prompt-compact.txt' : 'bot-prompt-full.txt'}`)
+if (!compact) console.log('  Nếu ô đó cắt bớt nội dung, chạy lại với --compact để bỏ phần playbook.')
 console.log('  Rồi chạy `npm run eval` để kiểm ranh giới còn giữ được ở độ dài mới.')
 console.log('')
