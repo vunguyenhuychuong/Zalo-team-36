@@ -1,5 +1,5 @@
 /**
- * Knowledge base cho bot — FAQ va playbook theo nganh.
+ * Knowledge base cho bot — FAQ, rule goi y, guardrail va playbook theo nganh.
  *
  * ====================================================================
  * NGUYEN TAC VIET FILE NAY, doc truoc khi them bat ky dong nao:
@@ -110,6 +110,41 @@ export const FAQ = [
     loai: 'fact',
     nguon: 'Bảng portfolio — OA: kết nối hệ thống. Phần "phần mềm cụ thể" cố ý để ngỏ.',
   },
+  {
+    khoa: ['cần oa', 'chưa có oa', 'mini app cần oa', 'business message cần oa', 'zbs cần oa'],
+    hoi: 'Cần OA mới làm Mini App hoặc ZBS không?',
+    dap:
+      'Có. OA là nền tảng gốc để doanh nghiệp hiện diện chính danh trên Zalo. Nếu bên mình chưa có OA thì nên làm OA trước; ' +
+      'Mini App hoặc ZBS là bước tiếp theo khi đã rõ nhu cầu đặt hàng, đặt lịch hoặc gửi thông báo.',
+    loai: 'fact',
+    nguon: 'Tài liệu bàn giao zalo_sme_agent_handover.md — B1 M0: OA là nền tảng gốc',
+  },
+  {
+    khoa: ['mini app khác website', 'mini app khác app riêng', 'native app', 'sandbox', 'chạy nền', 'background'],
+    hoi: 'Mini App khác website hoặc app riêng thế nào?',
+    dap:
+      'Mini App chạy trực tiếp trong Zalo nên khách không cần cài app riêng, phù hợp các luồng đặt hàng, đặt lịch, tích điểm và thanh toán trong Zalo. ' +
+      'Đổi lại, Mini App không chạy nền như app native, không truy cập toàn bộ dữ liệu điện thoại và phải tuân theo cơ chế duyệt của nền tảng.',
+    loai: 'fact',
+    nguon: 'Tài liệu bàn giao zalo_sme_agent_handover.md — B2 guardrails Mini App, B3 FAQ',
+  },
+  {
+    khoa: ['gửi hàng loạt', 'spam', 'marketing tự do', 'nhắn mọi user', 'broadcast', 'người chưa tương tác'],
+    hoi: 'Có gửi tin hàng loạt cho mọi người dùng Zalo được không?',
+    dap:
+      'Không. OA không phải kênh để gửi marketing tự do cho toàn bộ người dùng Zalo hoặc nhắn người chưa từng tương tác. ' +
+      'Các luồng ZBS cần mẫu tin được duyệt và cơ sở hợp lệ như giao dịch hoặc sự đồng ý của khách.',
+    loai: 'fact',
+    nguon: 'Tài liệu bàn giao zalo_sme_agent_handover.md — B2 guardrails OA/BM, B3 FAQ',
+  },
+  {
+    khoa: ['bạn là nhân viên zalo', 'có phải sales', 'chốt deal', 'ký hợp đồng', 'hợp đồng'],
+    hoi: 'Bạn có phải nhân viên Zalo và có chốt hợp đồng được không?',
+    dap:
+      'Em là trợ lý tư vấn để ghi nhận nhu cầu ban đầu và chuẩn bị thông tin bàn giao. Việc làm việc chi tiết, báo giá và chốt hợp đồng do chuyên viên Zalo phụ trách.',
+    loai: 'fact',
+    nguon: 'Tài liệu bàn giao zalo_sme_agent_handover.md — Phần A: danh tính và Never List',
+  },
 
   /* ---- Cac cau CO Y KHONG tra loi ---- */
   {
@@ -133,7 +168,213 @@ export const FAQ = [
     loai: 'deflect',
     nguon: 'Never List điều 6 — không cam kết lộ trình sản phẩm',
   },
+  {
+    khoa: ['mini app gửi thông báo', 'push notification', 'đẩy thông báo', 'nhắc qua mini app'],
+    hoi: 'Mini App có tự gửi thông báo cho khách được không?',
+    dap:
+      'Phần thông báo cần kiểm tra theo luồng triển khai cụ thể và điều kiện của nền tảng. Em ghi nhận nhu cầu này để chuyên viên xác nhận chính xác với anh/chị.',
+    loai: 'deflect',
+    nguon: 'Tài liệu bàn giao zalo_sme_agent_handover.md — B2 guardrails Mini App: quyền thông báo cần account xác nhận',
+  },
+  {
+    khoa: ['quản lý kho', 'quản lý nội bộ', 'nhân sự nội bộ', 'erp', 'vận hành nội bộ'],
+    hoi: 'Mini App có phù hợp để làm hệ thống quản lý nội bộ không?',
+    dap:
+      'Nếu nhu cầu chính là công cụ vận hành nội bộ, không hướng tới khách cuối trên Zalo, thì em không nên ép sang Mini App. ' +
+      'Em ghi nhận đúng nhu cầu để chuyên viên xem hướng phù hợp hơn.',
+    loai: 'deflect',
+    nguon: 'Tài liệu bàn giao zalo_sme_agent_handover.md — B1 M5: nhu cầu ngoài portfolio',
+  },
+  {
+    khoa: ['cccd', 'mật khẩu', 'số tài khoản', 'dữ liệu nhạy cảm', 'danh sách khách', 'pháp lý', 'an toàn dữ liệu'],
+    hoi: 'Có cần cung cấp dữ liệu nhạy cảm ở bước tư vấn không?',
+    dap:
+      'Không cần cung cấp CCCD, mật khẩu, số tài khoản hoặc danh sách khách ở bước tư vấn này. ' +
+      'Các chi tiết pháp lý và dữ liệu nhạy cảm sẽ được chuyên viên xử lý qua kênh chính thức.',
+    loai: 'deflect',
+    nguon: 'Tài liệu bàn giao zalo_sme_agent_handover.md — Never List dữ liệu nhạy cảm',
+  },
 ]
+
+/**
+ * Rule anh xa nhu cau -> san pham.
+ *
+ * Phan nay khong cham diem. No chi giup bot noi dung thu tu trien khai khi
+ * khach da ke nhu cau. Diem so va phan loai lead van nam trong scoring.js.
+ */
+export const RECOMMENDATION_RULES = [
+  {
+    id: 'M0',
+    dieuKien: 'Khách chưa có OA, hoặc chưa rõ đã có OA hay chưa.',
+    deXuat: 'Xác nhận trạng thái OA. Nếu chưa có OA thì đề xuất OA trước, Mini App/ZBS để ở bước sau.',
+    tienQuyet: 'Đăng ký OA và xác minh doanh nghiệp khi cần.',
+    ghiChu: 'OA là nền tảng gốc; không nhảy thẳng sang Mini App hoặc ZBS khi chưa biết trạng thái OA.',
+  },
+  {
+    id: 'M1',
+    dieuKien: 'Mục tiêu chính là hiện diện chính danh, tư vấn, chat, chatbot hoặc CSKH.',
+    deXuat: 'Zalo Official Account (OA).',
+    tienQuyet: 'Đăng ký OA và thiết lập hộp thư/quy trình trực chat.',
+    ghiChu: 'Với micro hoặc ngân sách thấp, ưu tiên OA cơ bản trước khi mở rộng.',
+  },
+  {
+    id: 'M2',
+    dieuKien: 'Đã có OA và mục tiêu là bán hàng/số hoá dịch vụ trong Zalo.',
+    deXuat: 'Zalo Mini App cho đặt hàng, đặt lịch, loyalty, tra cứu đơn hoặc bảo hành.',
+    tienQuyet: 'Có OA, xác định use case, luồng giao dịch, thanh toán và hệ thống backend/API nếu có.',
+    ghiChu: 'Chỉ đề xuất như bước chính khi nhu cầu hướng tới khách cuối, không phải công cụ vận hành nội bộ.',
+  },
+  {
+    id: 'M3',
+    dieuKien: 'Mục tiêu là gửi thông báo chủ động như OTP, xác nhận đơn, giao hàng, nhắc lịch hoặc nhắc thanh toán.',
+    deXuat: 'ZBS Template Message.',
+    tienQuyet: 'OA phù hợp, mẫu tin được duyệt và có cơ sở gửi hợp lệ như giao dịch hoặc sự đồng ý của khách.',
+    ghiChu: 'Không báo giá và không hứa hạn mức gửi; chuyên viên xác nhận theo chính sách hiện hành.',
+  },
+  {
+    id: 'M4',
+    dieuKien: 'Nhu cầu vừa bán hàng/số hoá trong Zalo, vừa cần thông báo tự động sau giao dịch.',
+    deXuat: 'Combo OA + Mini App + ZBS theo từng phase.',
+    tienQuyet: 'Đủ điều kiện riêng của từng sản phẩm.',
+    ghiChu: 'Mô hình điển hình: Mini App tạo giao dịch, backend gọi API, ZBS/OA gửi thông báo phù hợp.',
+  },
+  {
+    id: 'M5',
+    dieuKien: 'Nhu cầu nằm ngoài portfolio Zalo for Business, như app native chạy nền hoặc công cụ quản lý nội bộ thuần tuý.',
+    deXuat: 'Không ép sản phẩm.',
+    tienQuyet: 'Ghi nhận trung thực để chuyên viên xem hướng phù hợp.',
+    ghiChu: 'Có thể hỏi thêm doanh nghiệp có điểm chạm khách cuối nào trên Zalo không.',
+  },
+]
+
+/**
+ * Guardrail san pham — tra kem khi co nguy co khach hieu nham nang luc.
+ */
+export const PRODUCT_GUARDRAILS = {
+  miniapp: {
+    ten: 'Zalo Mini App',
+    khongThe: [
+      'Chạy nền như native app.',
+      'Truy cập toàn bộ dữ liệu điện thoại.',
+      'Bỏ qua quy trình review khi phát hành hoặc cập nhật.',
+      'Tự do gửi mọi loại thông báo mà không cần điều kiện nền tảng.',
+    ],
+    loiThoat:
+      'Nếu khách hỏi quyền nền tảng hoặc tính năng chưa chắc, nói em ghi nhận để chuyên viên xác nhận chính xác.',
+  },
+  oa: {
+    ten: 'Zalo Official Account',
+    khongThe: [
+      'Gửi marketing tự do cho toàn bộ người dùng Zalo.',
+      'Nhắn người chưa từng tương tác nếu không có luồng Business Message đủ điều kiện.',
+      'Lấy thông tin người dùng khi chưa có đồng ý.',
+      'Bỏ qua quota hoặc chính sách gói.',
+    ],
+    loiThoat:
+      'Nếu khách hỏi hạn mức hoặc chính sách gói, chuyển chuyên viên xác nhận thay vì đoán.',
+  },
+  zbs: {
+    ten: 'ZBS Template Message',
+    khongThe: [
+      'Gửi spam.',
+      'Gửi quảng cáo trá hình trong template giao dịch.',
+      'Sửa template đã duyệt mà không xét duyệt lại.',
+      'Gửi ngoài mục đích đã đăng ký.',
+    ],
+    loiThoat:
+      'Nếu khách hỏi nội dung/tần suất cụ thể, ghi nhận use case và để chuyên viên xác nhận mẫu tin hợp lệ.',
+  },
+}
+
+/**
+ * Schema report handover cho account.
+ *
+ * App hien tai chua co tool `save_lead_report`, nhung dashboard lead da can
+ * cung mot logic: account doc nhanh khach can gi, dang thieu dieu kien nao, va
+ * buoc tiep theo nen lam gi. Giu schema o KB/config de sau nay gan runtime ma
+ * khong phai sua lai prompt hanh vi.
+ */
+export const HANDOVER_REPORT_SCHEMA = {
+  phanLoai: [
+    {
+      key: 'quyMoNhanSu',
+      nhan: 'Quy mô nhân sự',
+      giaTri: ['micro', 'small', 'medium', 'large', 'chưa xác định'],
+      ghiChu: 'Ghi theo khách nói; không suy đoán nếu khách chưa nêu.',
+    },
+    {
+      key: 'nganSach',
+      nhan: 'Ngân sách dự kiến',
+      giaTri: ['low', 'mid', 'high', 'khách nêu cụ thể', 'chưa xác định'],
+      ghiChu: 'Chỉ ghi ngân sách khách tự nêu. Không biến thành báo giá của Zalo.',
+    },
+    {
+      key: 'mucTieuChinh',
+      nhan: 'Mục tiêu chính',
+      giaTri: ['presence_cskh', 'sales_digitization', 'notification', 'chưa xác định'],
+      ghiChu: 'Presence/CSKH cho OA; sales_digitization cho Mini App; notification cho ZBS.',
+    },
+    {
+      key: 'temperature',
+      nhan: 'Mức độ quan tâm',
+      giaTri: ['cold', 'warm', 'hot'],
+      ghiChu: 'Cold nếu còn tham khảo; warm nếu có pain/use case; hot nếu có nhu cầu rõ, timeline hoặc yêu cầu demo/báo giá/gọi lại.',
+    },
+  ],
+  nhuCau: [
+    'painPoint — vấn đề khách nói, giữ đúng ý khách',
+    'useCase — use case cụ thể nếu đã rõ',
+    'loaiGiaoDich — ecommerce / booking / loyalty / notification / n/a',
+  ],
+  hienTrang: [
+    'daCoOA — có / chưa / chưa rõ',
+    'oaDaXacThuc — có / chưa / chưa rõ',
+    'backendApi — có / chưa / chưa rõ',
+    'kenhHienTai — kênh khách đang bán hoặc chăm sóc',
+  ],
+  deXuatAgent: [
+    'ruleId — M0 đến M5 từ RECOMMENDATION_RULES',
+    'sanPhamDeXuat — OA / Mini App / ZBS / combo / không đề xuất',
+    'tienQuyetConThieu — điều kiện còn thiếu trước khi triển khai',
+    'diemCanAccountXacNhan — guardrail, pháp lý, kỹ thuật hoặc chính sách chưa chắc',
+  ],
+  handover: [
+    'mocThoiGianMongMuon — chỉ ghi nếu khách nói',
+    'ghiChuChoAccount — điểm cần hỏi tiếp hoặc xác nhận',
+    'cauHoiBoNgo — các trường quan trọng khách chưa trả lời',
+    'nextAction — 1 đến 3 hành động cụ thể cho account',
+  ],
+}
+
+export const HANDOVER_REPORT_WORKFLOW = {
+  nguyenTac: [
+    'Report phục vụ account, không đọc nguyên văn cho khách.',
+    'Chỉ ghi sự thật từ hội thoại; trường thiếu ghi "chưa xác định".',
+    'Phân biệt điều khách nói với đánh giá của agent.',
+    'Không đưa giá hoặc cam kết như thể đã được chốt.',
+  ],
+  trigger: [
+    'Đủ điều kiện handover.',
+    'Khách chủ động dừng hoặc muốn nhận thông tin sau.',
+    'Nhu cầu ngoài phạm vi portfolio nhưng vẫn cần account biết.',
+    'Hết luồng hội thoại hoặc timeout thì lưu report partial.',
+  ],
+  cacBuoc: [
+    'Gom dữ liệu vào schema HANDOVER_REPORT_SCHEMA.',
+    'Phân loại headcount, budget, goal và temperature.',
+    'Ánh xạ rule M0-M5 và ghi sản phẩm/điều kiện tiên quyết còn thiếu.',
+    'Gắn guardrail hoặc điểm cần account xác nhận.',
+    'Dựng 1-3 next action cụ thể cho account.',
+    'Lưu report và chỉ xác nhận ngắn với khách rằng chuyên viên sẽ liên hệ.',
+  ],
+  duDieuKienHandover: [
+    'Có mục tiêu chính.',
+    'Có pain point hoặc use case cụ thể.',
+    'Biết trạng thái OA hoặc ghi rõ chưa xác định để account hỏi ngay.',
+    'Có rule ID và sản phẩm đề xuất hoặc lý do không đề xuất.',
+    'Có ít nhất một next action cụ thể cho account.',
+  ],
+}
 
 /**
  * Playbook theo nganh — MO TA MO HINH dien hinh, KHONG phai case study.

@@ -17,7 +17,14 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { FAQ, PLAYBOOKS } from '../server/src/knowledgeBase.js'
+import {
+  FAQ,
+  HANDOVER_REPORT_SCHEMA,
+  HANDOVER_REPORT_WORKFLOW,
+  PLAYBOOKS,
+  PRODUCT_GUARDRAILS,
+  RECOMMENDATION_RULES,
+} from '../server/src/knowledgeBase.js'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const BASE = join(ROOT, 'prompts', 'bot-personality.txt')
@@ -46,6 +53,61 @@ const faqBlock = [
   ...faqDeflect.map((f) => `H: ${f.hoi}\nĐ: ${f.dap}`),
 ].join('\n')
 
+/* --- Rule anh xa nhu cau -> san pham --------------------------------- */
+const rulesBlock = [
+  'QUY TẮC ÁNH XẠ NHU CẦU → SẢN PHẨM — dùng khi đã đủ thông tin để đề xuất.',
+  'Nếu chưa biết khách đã có OA hay chưa, hỏi để xác nhận trước khi đưa Mini App/ZBS thành bước chính.',
+  '',
+  ...RECOMMENDATION_RULES.map(
+    (r) =>
+      `[${r.id}]\n` +
+      `Điều kiện: ${r.dieuKien}\n` +
+      `Đề xuất: ${r.deXuat}\n` +
+      `Tiên quyết: ${r.tienQuyet}\n` +
+      `Ghi chú: ${r.ghiChu}`,
+  ),
+].join('\n\n')
+
+/* --- Guardrail san pham ---------------------------------------------- */
+const guardrailsBlock = [
+  'GIỚI HẠN SẢN PHẨM — dùng để tránh hứa quá phạm vi.',
+  '',
+  ...Object.values(PRODUCT_GUARDRAILS).map(
+    (g) =>
+      `[${g.ten}]\n` +
+      `Không thể:\n` +
+      g.khongThe.map((x) => `- ${x}`).join('\n') +
+      `\nLối thoát: ${g.loiThoat}`,
+  ),
+].join('\n\n')
+
+/* --- Handover cho account -------------------------------------------- */
+const fieldNames = (items) =>
+  items
+    .map((x) => {
+      if (typeof x === 'string') return x.split(' — ')[0]
+      return `${x.key} (${x.nhan})`
+    })
+    .join('; ')
+
+const handoverBlock = [
+  'HANDOVER CHO ACCOUNT — dùng khi khách đã đủ thông tin hoặc muốn dừng.',
+  'Không đọc report này cho khách; chỉ xác nhận ngắn là đã ghi nhận và chuyên viên sẽ liên hệ.',
+  '',
+  'Nguyên tắc:',
+  ...HANDOVER_REPORT_WORKFLOW.nguyenTac.map((x) => `- ${x}`),
+  '',
+  'Nhóm trường cần gom:',
+  `- Phân loại: ${fieldNames(HANDOVER_REPORT_SCHEMA.phanLoai)}`,
+  `- Nhu cầu: ${fieldNames(HANDOVER_REPORT_SCHEMA.nhuCau)}`,
+  `- Hiện trạng: ${fieldNames(HANDOVER_REPORT_SCHEMA.hienTrang)}`,
+  `- Đề xuất của agent: ${fieldNames(HANDOVER_REPORT_SCHEMA.deXuatAgent)}`,
+  `- Handover: ${fieldNames(HANDOVER_REPORT_SCHEMA.handover)}`,
+  '',
+  'Đủ điều kiện handover khi:',
+  ...HANDOVER_REPORT_WORKFLOW.duDieuKienHandover.map((x) => `- ${x}`),
+].join('\n')
+
 /* --- Playbook theo nganh ---------------------------------------------- */
 const playbookBlock = [
   'MÔ HÌNH TRIỂN KHAI THEO NGÀNH — dùng để giải thích thứ tự nên làm.',
@@ -71,6 +133,18 @@ const composed = [
   'PHẦN KIẾN THỨC — tra cứu khi khách hỏi tới. Mọi ranh giới ở trên vẫn áp dụng.',
   '='.repeat(72),
   '',
+  rulesBlock,
+  '',
+  '-'.repeat(72),
+  '',
+  guardrailsBlock,
+  '',
+  '-'.repeat(72),
+  '',
+  handoverBlock,
+  '',
+  '-'.repeat(72),
+  '',
   faqBlock,
   ...(compact ? [] : ['', '-'.repeat(72), '', playbookBlock]),
   '',
@@ -80,12 +154,15 @@ writeFileSync(OUT, composed, 'utf8')
 
 const kb = (n) => `${(n / 1024).toFixed(1)} KB (~${Math.round(n / 3)} token)`
 console.log('')
-console.log('  Đã ghi prompts/bot-prompt-full.txt')
+console.log(`  Đã ghi prompts/${compact ? 'bot-prompt-compact.txt' : 'bot-prompt-full.txt'}`)
 console.log('')
 console.log(`  Prompt gốc      ${kb(Buffer.byteLength(base, 'utf8'))}`)
 console.log(
   `  + kiến thức     ${kb(Buffer.byteLength(composed, 'utf8') - Buffer.byteLength(base, 'utf8'))}` +
-    `   (${faqFact.length} FAQ trả lời được, ${faqDeflect.length} FAQ chuyển chuyên viên` +
+    `   (${RECOMMENDATION_RULES.length} rule, ` +
+    `${Object.keys(PRODUCT_GUARDRAILS).length} nhóm guardrail, ` +
+    `${HANDOVER_REPORT_WORKFLOW.duDieuKienHandover.length} tiêu chí handover, ` +
+    `${faqFact.length} FAQ trả lời được, ${faqDeflect.length} FAQ chuyển chuyên viên` +
     (compact ? ', bỏ playbook)' : `, ${Object.keys(PLAYBOOKS).length} ngành)`),
 )
 console.log(`  = tổng          ${kb(Buffer.byteLength(composed, 'utf8'))}`)
