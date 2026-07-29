@@ -1,11 +1,17 @@
 import { IconArrowRight, IconBack, IconLock } from './icons'
 import type { View } from '../App'
 
+/**
+ * Chi liet ke nhung muc DAN TOI mot man that.
+ *
+ * Truoc day co them "Sản phẩm Zalo" va "Tài nguyên" — hai muc trang tri copy
+ * theo anh mau FPT.AI, ca hai cung tro ve view 'chat'. Chung gay hai loi thay
+ * duoc: bam vao thi nhay sang man chat chang lien quan gi, va vi `aria-current`
+ * so theo view nen ba muc cung sang mot luc.
+ */
 const PUBLIC_NAV: { label: string; view: View }[] = [
   { label: 'Trò chuyện', view: 'chat' },
   { label: 'Điền form', view: 'form' },
-  { label: 'Sản phẩm Zalo', view: 'chat' },
-  { label: 'Tài nguyên', view: 'chat' },
 ]
 
 const INTERNAL_NAV: { label: string; view: View }[] = [
