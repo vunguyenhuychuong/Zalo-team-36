@@ -201,6 +201,9 @@ export interface Lead {
   painPoint: string
   topSolution: string
   topScore: number
+  /** Bo rule va prompt da dung de cham lead nay — tai lieu yeu cau versioned */
+  rulesetVersion: string
+  promptVersion: string
   /** Do agent tinh — khong ai set duoc qua API */
   qualification: Qualification
   /** Do account quyet dinh */

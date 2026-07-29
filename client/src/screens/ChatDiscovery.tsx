@@ -43,6 +43,11 @@ export function ChatDiscovery({ onDone, submitting, serverError }: Props) {
   const [ex, setEx] = useState<ChatExtract | null>(null)
   const [checking, setChecking] = useState(false)
   const [confirming, setConfirming] = useState(false)
+  /**
+   * Da cham nguong so luot chua. Tai lieu, muc Decision Loop: phai co nguong de
+   * dung thay vi hoi mai khi khach tra loi khong ro.
+   */
+  const [atLimit, setAtLimit] = useState(false)
 
   /** Phan nguoi dung tu dien o buoc xac nhan */
   const [goals, setGoals] = useState<string[]>([])
@@ -73,6 +78,7 @@ export function ChatDiscovery({ onDone, submitting, serverError }: Props) {
     try {
       const r = await api.chat(next)
       setMessages([...next, { role: 'assistant', content: r.text }])
+      if (r.atLimit) setAtLimit(true)
     } catch (e) {
       setError((e as Error).message)
       // Bo lai luot vua gui de nguoi dung khong mat cong go
@@ -283,7 +289,17 @@ export function ChatDiscovery({ onDone, submitting, serverError }: Props) {
         <div ref={endRef} />
       </div>
 
-      {!confirming && (
+      {atLimit && !confirming && (
+        <div className="chat-limit">
+          <IconAlert size={15} />
+          <span>
+            Đã hỏi khá nhiều lượt mà chưa đủ thông tin. Anh/chị sang tab <b>Điền form</b> giúp em —
+            nhanh hơn và em có bản đề xuất đầy đủ ngay.
+          </span>
+        </div>
+      )}
+
+      {!confirming && !atLimit && (
         <>
           {userTurns === 0 && (
             <div className="chat-hints">

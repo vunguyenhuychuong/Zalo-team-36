@@ -12,7 +12,8 @@ import { listLeads, load, reset, setOpeningLine, toLead, transition, upsertLead 
 import { HUMAN_STATUSES, TRANSITIONS } from './leadStatus.js'
 import { generateOpeningLine } from './openingLine.js'
 import { LlmError, isConfigured as llmConfigured, modelName } from './llm.js'
-import { extract, reply, systemPromptInfo } from './chat.js'
+import { chatEnabled, extract, reply, systemPromptInfo } from './chat.js'
+import { RULESET_VERSION, promptVersion } from './version.js'
 import { login, logout, requireInternal, sessionCount, usingDefaultPassword } from './auth.js'
 
 /**
@@ -143,8 +144,21 @@ function normalize(body) {
    --------------------------------------------------------------------- */
 
 app.get('/api/health', (_req, res) =>
-  ok(res, { status: 'up', leads: listLeads().length, sessions: sessionCount() }),
+  ok(res, {
+    status: 'up',
+    leads: listLeads().length,
+    sessions: sessionCount(),
+    chatEnabled: chatEnabled(),
+    rulesetVersion: RULESET_VERSION,
+    promptVersion: promptVersion().version,
+  }),
 )
+
+/**
+ * Cau hinh cong khai cho client. Tach khoi /api/health de client biet an tab
+ * chat khi luong do bi tat, thay vi de nguoi dung go xong roi moi bao loi.
+ */
+app.get('/api/config', (_req, res) => ok(res, { chatEnabled: chatEnabled() }))
 
 /* ---------------------------------------------------------------------
    Auth khu vuc noi bo
@@ -228,6 +242,7 @@ app.post('/api/analyze', (req, res) => {
 
 /** Mot luot hoi thoai. */
 app.post('/api/chat', async (req, res) => {
+  if (!chatEnabled()) return fail(res, 503, 'Luồng chat đang tạm khoá. Anh/chị dùng mẫu ở tab "Điền form" giúp em nhé.')
   const { messages } = req.body ?? {}
   if (!Array.isArray(messages) || messages.length === 0) {
     return fail(res, 400, 'Cần mảng `messages` với ít nhất một tin nhắn.')
@@ -255,6 +270,7 @@ app.post('/api/chat', async (req, res) => {
  * code (danh sach REQUIRED trong chat.js), khong de LLM tu phan xu.
  */
 app.post('/api/chat/extract', async (req, res) => {
+  if (!chatEnabled()) return fail(res, 503, 'Luồng chat đang tạm khoá.')
   const { messages } = req.body ?? {}
   if (!Array.isArray(messages)) return fail(res, 400, 'Cần mảng `messages`.')
 

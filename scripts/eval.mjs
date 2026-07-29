@@ -24,9 +24,14 @@ import '../server/src/env.js'
 import { analyze } from '../server/src/scoring.js'
 import { DEMO_PERSONAS, EXPECTATIONS } from '../server/src/demoPersonas.js'
 import { complete, isConfigured, modelName } from '../server/src/llm.js'
+import { promptVersion } from '../server/src/version.js'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
-const PROMPT_VERSION = 'prompt-v6'
+/**
+ * Doc tu chinh file prompt, KHONG hardcode. Truoc day so phien ban nam o ba cho
+ * (hai dong trong bot-personality.txt va mot hang so o day) nen de lech nhau.
+ */
+const PROMPT_VERSION = promptVersion().version
 const skipLlm = process.argv.includes('--no-llm')
 
 /**

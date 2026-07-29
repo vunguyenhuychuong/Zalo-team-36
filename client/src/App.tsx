@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Header } from './components/Header'
 import { DiscoveryForm } from './screens/DiscoveryForm'
 import { ChatDiscovery } from './screens/ChatDiscovery'
@@ -50,10 +50,32 @@ export default function App() {
   const [error, setError] = useState<string | null>(null)
   const [pendingName, setPendingName] = useState('')
 
+  /**
+   * Luong chat co dang bat khong. Tai lieu, muc Orchestration: phai co cach
+   * "tam khoa luong do" khi agent noi sai — dat CHAT_ENABLED=false la xong.
+   * Mac dinh true de neu goi /api/config that bai thi chat van chay.
+   */
+  const [chatOn, setChatOn] = useState(true)
+  useEffect(() => {
+    let alive = true
+    api
+      .config()
+      .then((c) => {
+        if (!alive) return
+        setChatOn(c.chatEnabled)
+        if (!c.chatEnabled) setView((v) => (v === 'chat' ? 'form' : v))
+      })
+      .catch(() => {})
+    return () => {
+      alive = false
+    }
+  }, [])
+
   const [rec, setRec] = useState<Rec | null>(null)
   const [advisorRec, setAdvisorRec] = useState<InternalRecommendation | null>(null)
 
   function navigate(next: View) {
+    if (next === 'chat' && !chatOn) return
     if (next === 'result' && !rec) return
     if (next === 'advisorResult' && !advisorRec) return
 
@@ -134,6 +156,7 @@ export default function App() {
         view={view}
         authed={authed}
         internalArea={needsLogin || isInternalView(view)}
+        chatEnabled={chatOn}
         onNavigate={navigate}
         onLogout={logout}
       />
@@ -151,7 +174,7 @@ export default function App() {
           cuoc hoi thoai mat sach khi nguoi dung bam sang tab khac roi quay lai.
           Giu mounted, chi an bang CSS.
         */}
-        <div hidden={needsLogin || view !== 'chat'}>
+        <div hidden={needsLogin || view !== 'chat' || !chatOn}>
           <ChatDiscovery onDone={submitSme} submitting={submitting} serverError={error} />
         </div>
 

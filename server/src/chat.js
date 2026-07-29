@@ -46,8 +46,37 @@ export function systemPromptInfo() {
   return { bytes: Buffer.byteLength(SYSTEM, 'utf8') }
 }
 
+/**
+ * Cong tac tat luong chat.
+ *
+ * Tai lieu, muc Orchestration: "Neu agent bao sai gia, chinh sach hoac cam ket
+ * tinh nang, TAM KHOA luong do cho toi khi qua kiem thu."
+ *
+ * Dat CHAT_ENABLED=false trong .env roi deploy lai la tat trong ~30 giay, khong
+ * phai sua code. Man SME dang form van chay binh thuong.
+ */
+export function chatEnabled() {
+  return String(process.env.CHAT_ENABLED ?? 'true').toLowerCase() !== 'false'
+}
+
 /** Gioi han lich su de khong phinh chi phi: prompt da 4400 token, gui lai moi luot. */
 const MAX_TURNS = 16
+
+/**
+ * Toi da bao nhieu luot cua KHACH truoc khi dung lai.
+ *
+ * Tai lieu, muc Decision Loop: "Gioi han so buoc va tranh vong lap vo han. Neu
+ * agent cu hoi di hoi lai ma khong tien trien (khach khong tra loi ro), can
+ * nguong de dung va dua vao nurture thay vi hoi mai."
+ *
+ * Cham nguong thi tra ve cau chot san — KHONG goi model, nen khong ton token.
+ */
+const MAX_USER_TURNS = 8
+
+const AT_LIMIT_REPLY =
+  'Dạ, để không làm mất thêm thời gian của anh/chị, em xin phép dừng phần hỏi ở đây ạ. ' +
+  'Anh/chị điền nhanh mẫu thông tin bên tab "Điền form" giúp em — chỉ khoảng hai phút, ' +
+  'và em sẽ có bản đề xuất đầy đủ kèm điểm phù hợp từng giải pháp gửi anh/chị.'
 
 function trimHistory(messages) {
   const clean = (Array.isArray(messages) ? messages : [])
@@ -62,6 +91,13 @@ export async function reply(messages) {
   const history = trimHistory(messages)
   if (history.length === 0) throw new LlmError('Chưa có tin nhắn nào.')
 
+  const userTurns = (Array.isArray(messages) ? messages : []).filter((m) => m?.role === 'user').length
+
+  // Cham nguong: tra cau chot san, khong goi model
+  if (userTurns > MAX_USER_TURNS) {
+    return { text: AT_LIMIT_REPLY, model: null, tokens: 0, atLimit: true, turnsLeft: 0 }
+  }
+
   const { text, model, tokens } = await complete({
     system: SYSTEM,
     messages: history,
@@ -69,7 +105,13 @@ export async function reply(messages) {
     temperature: 0.4,
   })
 
-  return { text, model, tokens }
+  return {
+    text,
+    model,
+    tokens,
+    atLimit: false,
+    turnsLeft: Math.max(0, MAX_USER_TURNS - userTurns),
+  }
 }
 
 /* =====================================================================

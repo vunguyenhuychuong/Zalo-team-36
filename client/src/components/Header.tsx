@@ -20,10 +20,14 @@ interface Props {
   internalArea: boolean
   onNavigate: (v: View) => void
   onLogout: () => void
+  /** Luong chat bi khoa thi an tab do di, khong de nguoi dung bam vao roi bao loi */
+  chatEnabled?: boolean
 }
 
-export function Header({ view, authed, internalArea, onNavigate, onLogout }: Props) {
-  const nav = internalArea ? INTERNAL_NAV : PUBLIC_NAV
+export function Header({ view, authed, internalArea, onNavigate, onLogout, chatEnabled = true }: Props) {
+  const nav = (internalArea ? INTERNAL_NAV : PUBLIC_NAV).filter(
+    (i) => chatEnabled || i.view !== 'chat',
+  )
 
   return (
     <header className={'header' + (internalArea ? ' header--internal' : '')}>

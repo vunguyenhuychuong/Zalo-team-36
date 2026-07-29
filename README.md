@@ -344,6 +344,33 @@ curl -X POST https://zah-36.123c.vn/api/leads/reset
 
 ---
 
+## Ba thứ tài liệu "7 components" yêu cầu, đã có
+
+**Khoá luồng chat khi agent nói sai** — mục Orchestration: *"Nếu agent báo sai giá, chính sách hoặc
+cam kết tính năng, tạm khoá luồng đó cho tới khi qua kiểm thử."*
+
+```bash
+# trong .env
+CHAT_ENABLED=false
+```
+
+Rồi `bash scripts/deploy.sh`. Client đọc `/api/config` lúc mở trang nên **ẩn luôn tab Trò chuyện**,
+không để người dùng gõ xong mới báo lỗi. Màn SME dạng form vẫn chạy bình thường.
+
+**Versioned config** — mục Memory: *"Định nghĩa trạng thái nên versioned vì Sales/Product/AI hiệu
+chỉnh hàng tuần trong pilot."* Mỗi lead đóng `rulesetVersion` và `promptVersion`, nên truy được nó
+được chấm bằng bộ rule nào.
+
+`RULESET_VERSION` tăng tay trong `server/src/version.js` khi đổi trọng số, ngưỡng, hoặc bảng chuyển
+trạng thái. `promptVersion` thì **đọc từ chính file prompt** — trước đây số phiên bản nằm ở ba chỗ
+nên dễ lệch nhau, giờ chỉ còn một nguồn và có cảnh báo nếu hai dòng trong file không khớp.
+
+**Giới hạn vòng lặp hội thoại** — mục Decision Loop: *"Nếu agent cứ hỏi đi hỏi lại mà không tiến
+triển, cần ngưỡng để dừng và đưa vào nurture thay vì hỏi mãi."* Quá 8 lượt của khách thì trả câu chốt
+sẵn mời chuyển sang form — **không gọi model**, nên không tốn token cho một hội thoại đang đi vào ngõ cụt.
+
+---
+
 ## Xử lý sự cố
 
 **`EADDRINUSE: address already in use :::4000`** — `npm run dev` vẫn đang chạy ở cửa sổ khác và

@@ -97,11 +97,22 @@ export const api = {
     })
   },
 
+  /** Cấu hình công khai — client dùng để ẩn tab chat khi luồng đó bị khoá. */
+  config() {
+    return request<{ chatEnabled: boolean }>('/config')
+  },
+
   /* ---------------- Luong chat (cong khai) ---------------- */
 
   /** Một lượt hội thoại. LLM hỏi chuyện, trả lời dựa trên knowledge base. */
   chat(messages: ChatMessage[]) {
-    return request<{ text: string; model: string; tokens: number | null }>('/chat', {
+    return request<{
+      text: string
+      model: string | null
+      tokens: number | null
+      atLimit: boolean
+      turnsLeft: number
+    }>('/chat', {
       method: 'POST',
       body: JSON.stringify({ messages }),
     })

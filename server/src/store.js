@@ -3,6 +3,7 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { analyze } from './scoring.js'
 import { DEFAULT_STATUS, checkTransition } from './leadStatus.js'
+import { stamp } from './version.js'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const DATA_DIR = join(HERE, '..', 'data')
@@ -136,6 +137,12 @@ export function toLead(input, result, createdAt = new Date().toISOString(), sour
      */
     openingLine: null,
 
+    /**
+     * Bo rule va prompt da dung de cham lead nay. Tai lieu yeu cau config
+     * versioned; khong co no thi khong tra loi duoc "lead nay cham bang gi".
+     */
+    ...stamp(),
+
     /** Trang thai do account quyet dinh. Agent luon ban giao o muc NEW. */
     status: DEFAULT_STATUS,
     /**
@@ -250,6 +257,8 @@ export function upsertLead(lead) {
     topScore: lead.topScore,
     qualification: lead.qualification,
     source: lead.source,
+    // Cham lai bang bo rule hien tai, nen dong lai version moi
+    ...stamp(),
 
     // Meta
     updatedAt: new Date().toISOString(),
