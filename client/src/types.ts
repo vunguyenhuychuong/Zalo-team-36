@@ -105,6 +105,9 @@ export interface Recommendation {
   summary: string
   /** Lo trinh 30-60-90 ngay (Stage 2 teaser) */
   roadmap: { phase: string; title: string; items: string[] }[]
+  /** true khi day la lan gui lai cua mot doanh nghiep da co trong he thong */
+  isReturning?: boolean
+  submissions?: number
 }
 
 /**
@@ -183,6 +186,10 @@ export interface StatusConfig {
 export interface Lead {
   id: string
   createdAt: string
+  /** Lan gui gan nhat — khac createdAt khi khach quay lai */
+  updatedAt: string
+  /** So lan doanh nghiep nay gui thong tin. > 1 la khach quay lai */
+  submissions: number
   source: LeadSource
   companyName: string
   contactName: string

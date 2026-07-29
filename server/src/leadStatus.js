@@ -64,7 +64,12 @@ export const TRANSITIONS = {
   ACCEPTED: ['QUALIFIED', 'NURTURING', 'REJECTED'],
   QUALIFIED: ['REJECTED'],
   NURTURING: ['ACCEPTED', 'REJECTED'],
-  REJECTED: [],
+  /**
+   * REJECTED khong phai duong cung: khach da bi bo qua co the quay lai voi nhu
+   * cau ro hon, va upsertLead() se cap nhat lead cu chu khong tao ban moi. Neu
+   * khong cho mo lai thi lead do ket vinh vien du diem da doi.
+   */
+  REJECTED: ['ACCEPTED', 'NURTURING'],
 }
 
 export const DEFAULT_STATUS = 'NEW'

@@ -198,6 +198,14 @@ export function LeadDashboard({ onUnauthorized }: { onUnauthorized: () => void }
                         nhân sự nhập
                       </span>
                     )}
+                    {l.submissions > 1 && (
+                      <span
+                        className="src-tag src-tag--return"
+                        title={`Đã gửi ${l.submissions} lần. Bản bàn giao được cập nhật, không tạo bản trùng.`}
+                      >
+                        quay lại · {l.submissions}
+                      </span>
+                    )}
                   </b>
                   <span>
                     {labelOf(INDUSTRIES, l.industry).split('—')[0].trim()} · {l.topSolution}{' '}

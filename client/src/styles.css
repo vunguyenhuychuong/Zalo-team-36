@@ -1687,6 +1687,11 @@ select.control[data-empty='true'] {
   color: var(--ink-2);
 }
 
+.src-tag--return {
+  background: var(--warn-tint);
+  color: var(--warn);
+}
+
 .src-tag {
   display: inline-block;
   margin-left: 8px;

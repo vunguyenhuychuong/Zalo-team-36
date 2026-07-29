@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url'
 import express from 'express'
 import cors from 'cors'
 import { analyze } from './scoring.js'
-import { addLead, listLeads, load, reset, setOpeningLine, toLead, transition } from './store.js'
+import { listLeads, load, reset, setOpeningLine, toLead, transition, upsertLead } from './store.js'
 import { HUMAN_STATUSES, TRANSITIONS } from './leadStatus.js'
 import { generateOpeningLine } from './openingLine.js'
 import { LlmError, isConfigured as llmConfigured, modelName } from './llm.js'
@@ -187,7 +187,8 @@ app.post('/api/analyze', (req, res) => {
 
   try {
     const result = analyze(input)
-    const lead = addLead(toLead(input, result, undefined, 'sme_self'))
+    // Cung doanh nghiep gui lai thi CAP NHAT lead cu, khong tao ban trung
+    const { lead, created } = upsertLead(toLead(input, result, undefined, 'sme_self'))
 
     /**
      * KHONG tra `qualification` ve day.
@@ -205,6 +206,8 @@ app.post('/api/analyze', (req, res) => {
     return ok(res, {
       id: lead.id,
       createdAt: lead.createdAt,
+      isReturning: !created,
+      submissions: lead.submissions,
       input,
       solutions: stripCost(result.solutions),
       summary: result.summary,
@@ -280,10 +283,12 @@ app.post('/api/internal/analyze', requireInternal, (req, res) => {
 
   try {
     const result = analyze(input)
-    const lead = addLead(toLead(input, result, undefined, 'internal_advisor'))
+    const { lead, created } = upsertLead(toLead(input, result, undefined, 'internal_advisor'))
 
     return ok(res, {
       id: lead.id,
+      isReturning: !created,
+      submissions: lead.submissions,
       createdAt: lead.createdAt,
       input,
       solutions: result.solutions,

@@ -159,9 +159,12 @@ const SEED_STATUS = {
 function seed() {
   // Lui ngay tao cua seed ve truoc de danh sach nhin nhu da chay mot thoi gian
   const now = Date.now()
-  leads = SEED_INPUTS.map((input, i) =>
-    toLead(input, analyze(input), new Date(now - (i + 1) * 3600_000 * 7).toISOString()),
-  )
+  // Gan them submissions/updatedAt nhu upsertLead lam, khong thi seed thieu
+  // hai truong nay va type `Lead` noi doi (khai bao la bat buoc).
+  leads = SEED_INPUTS.map((input, i) => {
+    const createdAt = new Date(now - (i + 1) * 3600_000 * 7).toISOString()
+    return { ...toLead(input, analyze(input), createdAt), submissions: 1, updatedAt: createdAt }
+  })
 
   // Chay qua dung ham transition() de history hop le, khong gan tay
   for (const lead of leads) {
@@ -196,10 +199,77 @@ function persist() {
   }
 }
 
-export function addLead(lead) {
-  leads.unshift(lead)
+/** Chuan hoa de so khop: email khong phan biet hoa thuong, sdt chi giu chu so. */
+const normEmail = (s) => String(s ?? '').trim().toLowerCase()
+const normPhone = (s) => String(s ?? '').replace(/\D/g, '')
+
+/**
+ * Tim lead cua cung mot doanh nghiep. Khop email HOAC so dien thoai la du —
+ * khach quay lai co the go email khac nhung dung so cu, hoac nguoc lai.
+ */
+function findExisting(input) {
+  const email = normEmail(input.email)
+  const phone = normPhone(input.phone)
+  return leads.find(
+    (l) =>
+      (email && normEmail(l.email) === email) || (phone && phone.length >= 9 && normPhone(l.phone) === phone),
+  )
+}
+
+/**
+ * Tao lead moi, HOAC cap nhat lead cu neu cung doanh nghiep gui lai.
+ *
+ * Tai lieu yeu cau ro: "Neu mot hoi thoai da ket thuc duoc mo lai (khach quay
+ * lai sau vai ngay)... ban ban giao duoc CAP NHAT thay vi tao moi, de account
+ * khong nhan hai ban trung cho cung mot lead."
+ *
+ * Giu nguyen nhung gi thuoc quyet dinh cua ACCOUNT (status, history) — khach
+ * gui lai khong duoc phep reset viec account da xu ly. Xoa `openingLine` vi no
+ * sinh ra tu painPoint va giai phap cu, gio hai thu do da doi.
+ */
+export function upsertLead(lead) {
+  const existing = findExisting(lead)
+
+  if (!existing) {
+    leads.unshift({ ...lead, submissions: 1, updatedAt: lead.createdAt })
+    persist()
+    return { lead: leads[0], created: true }
+  }
+
+  Object.assign(existing, {
+    // Du lieu moi tu lan gui nay
+    companyName: lead.companyName,
+    contactName: lead.contactName,
+    phone: lead.phone,
+    email: lead.email,
+    industry: lead.industry,
+    companySize: lead.companySize,
+    region: lead.region,
+    painPoint: lead.painPoint,
+    topSolution: lead.topSolution,
+    topScore: lead.topScore,
+    qualification: lead.qualification,
+    source: lead.source,
+
+    // Meta
+    updatedAt: new Date().toISOString(),
+    submissions: (existing.submissions ?? 1) + 1,
+
+    // Cau mo dau cu da lac hau vi painPoint va giai phap vua doi
+    openingLine: null,
+
+    // KHONG dung tay vao: createdAt, status, history
+  })
+
   persist()
-  return lead
+  return { lead: existing, created: false }
+}
+
+/** Giu lai cho seed — luon tao moi, khong can so khop. */
+export function addLead(lead) {
+  leads.unshift({ ...lead, submissions: 1, updatedAt: lead.createdAt })
+  persist()
+  return leads[0]
 }
 
 export function listLeads() {

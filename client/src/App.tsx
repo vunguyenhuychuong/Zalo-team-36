@@ -146,9 +146,14 @@ export default function App() {
           setPendingView('dashboard')
         }} />}
 
-        {!needsLogin && view === 'chat' && (
+        {/*
+          Chat KHONG render co dieu kien: neu unmount thi useState bi xoa va ca
+          cuoc hoi thoai mat sach khi nguoi dung bam sang tab khac roi quay lai.
+          Giu mounted, chi an bang CSS.
+        */}
+        <div hidden={needsLogin || view !== 'chat'}>
           <ChatDiscovery onDone={submitSme} submitting={submitting} serverError={error} />
-        )}
+        </div>
 
         {!needsLogin && view === 'result' && rec && (
           <Recommendation rec={rec} onRestart={() => navigate('chat')} />
