@@ -2,10 +2,10 @@ import { IconArrowRight, IconBack, IconLock } from './icons'
 import type { View } from '../App'
 
 const PUBLIC_NAV: { label: string; view: View }[] = [
-  { label: 'Tư vấn giải pháp', view: 'form' },
-  { label: 'Sản phẩm Zalo', view: 'form' },
-  { label: 'Use cases', view: 'form' },
-  { label: 'Tài nguyên', view: 'form' },
+  { label: 'Trò chuyện', view: 'chat' },
+  { label: 'Điền form', view: 'form' },
+  { label: 'Sản phẩm Zalo', view: 'chat' },
+  { label: 'Tài nguyên', view: 'chat' },
 ]
 
 const INTERNAL_NAV: { label: string; view: View }[] = [

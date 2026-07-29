@@ -1,4 +1,6 @@
 import type {
+  ChatExtract,
+  ChatMessage,
   DiscoveryInput,
   InternalRecommendation,
   Lead,
@@ -92,6 +94,27 @@ export const api = {
     return request<Recommendation>('/analyze', {
       method: 'POST',
       body: JSON.stringify(input),
+    })
+  },
+
+  /* ---------------- Luong chat (cong khai) ---------------- */
+
+  /** Một lượt hội thoại. LLM hỏi chuyện, trả lời dựa trên knowledge base. */
+  chat(messages: ChatMessage[]) {
+    return request<{ text: string; model: string; tokens: number | null }>('/chat', {
+      method: 'POST',
+      body: JSON.stringify({ messages }),
+    })
+  },
+
+  /**
+   * Rút thông tin đã thu được từ hội thoại. Việc quyết định "đủ chưa" nằm ở
+   * server (danh sách REQUIRED trong chat.js), không để LLM tự phân xử.
+   */
+  chatExtract(messages: ChatMessage[]) {
+    return request<ChatExtract>('/chat/extract', {
+      method: 'POST',
+      body: JSON.stringify({ messages }),
     })
   },
 

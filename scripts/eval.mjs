@@ -26,7 +26,7 @@ import { DEMO_PERSONAS, EXPECTATIONS } from '../server/src/demoPersonas.js'
 import { complete, isConfigured, modelName } from '../server/src/llm.js'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
-const PROMPT_VERSION = 'prompt-v5'
+const PROMPT_VERSION = 'prompt-v6'
 const skipLlm = process.argv.includes('--no-llm')
 
 /**

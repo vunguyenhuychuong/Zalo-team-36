@@ -141,6 +141,25 @@ export interface StatusChange {
   agentSaid: string | null
 }
 
+/** Mot luot trong hoi thoai tu van. */
+export interface ChatMessage {
+  role: 'user' | 'assistant'
+  content: string
+}
+
+/**
+ * Ket qua trich xuat tu hoi thoai.
+ *
+ * `ready` nghia la du ngu canh de sang buoc xac nhan — KHONG phai du de cham
+ * diem. `goals` va thong tin lien he do nguoi dung tu dien, xem ghi chu trong
+ * server/src/chat.js.
+ */
+export interface ChatExtract {
+  collected: Partial<DiscoveryInput>
+  missing: string[]
+  ready: boolean
+}
+
 /**
  * Cau mo dau goi y cho account — field cuoi trong ban ban giao.
  * `source` cho biet do model viet hay roi ve mau dung san.

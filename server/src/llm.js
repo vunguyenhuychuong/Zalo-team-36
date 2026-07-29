@@ -37,10 +37,17 @@ export class LlmError extends Error {}
  * 200 OK nhung content = null, va model reasoning nhu DeepSeek-V4-Flash de bi
  * cat het token vao phan suy nghi neu maxTokens qua thap.
  */
-export async function complete({ system, user, maxTokens = 400, temperature = 0.4 }) {
+export async function complete({ system, user, messages, maxTokens = 400, temperature = 0.4 }) {
   if (!isConfigured()) {
     throw new LlmError('Chưa cấu hình FPT_API_KEY.')
   }
+
+  /**
+   * Nhan mot trong hai dang:
+   *   { user: '...' }          mot luot don — dung cho cau mo dau, trich xuat
+   *   { messages: [...] }      hoi thoai nhieu luot — dung cho luong chat
+   */
+  const turns = Array.isArray(messages) && messages.length ? messages : [{ role: 'user', content: user }]
 
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS)
@@ -56,10 +63,7 @@ export async function complete({ system, user, maxTokens = 400, temperature = 0.
       },
       body: JSON.stringify({
         model: modelName(),
-        messages: [
-          { role: 'system', content: system },
-          { role: 'user', content: user },
-        ],
+        messages: [{ role: 'system', content: system }, ...turns],
         max_tokens: maxTokens,
         temperature,
       }),

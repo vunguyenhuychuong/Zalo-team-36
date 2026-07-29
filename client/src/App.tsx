@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Header } from './components/Header'
 import { DiscoveryForm } from './screens/DiscoveryForm'
+import { ChatDiscovery } from './screens/ChatDiscovery'
 import { Recommendation } from './screens/Recommendation'
 import { LeadDashboard } from './screens/LeadDashboard'
 import { InternalLogin } from './screens/InternalLogin'
@@ -9,12 +10,13 @@ import { UnauthorizedError, api, auth } from './api'
 import type { DiscoveryInput, InternalRecommendation, Recommendation as Rec } from './types'
 
 /**
- * Ba be mat, mot engine:
- *   form / result  — SME tu phuc vu. Cong khai. Khong thay diem, khong thay gia.
+ * Bon be mat, mot engine:
+ *   chat           — cua truoc dang hoi thoai. LLM hoi chuyen + trich xuat, code cham diem.
+ *   form / result  — SME tu dien form. Cong khai. Khong thay diem, khong thay gia.
  *   advisor        — nhan su Zalo nhap ho khach. Can dang nhap.
  *   dashboard      — hang doi lead. Can dang nhap.
  */
-export type View = 'form' | 'result' | 'advisor' | 'advisorResult' | 'dashboard'
+export type View = 'chat' | 'form' | 'result' | 'advisor' | 'advisorResult' | 'dashboard'
 
 const INTERNAL_VIEWS: View[] = ['advisor', 'advisorResult', 'dashboard']
 export const isInternalView = (v: View) => INTERNAL_VIEWS.includes(v)
@@ -39,7 +41,7 @@ function Thinking({ company, internal }: { company: string; internal?: boolean }
 }
 
 export default function App() {
-  const [view, setView] = useState<View>('form')
+  const [view, setView] = useState<View>('chat')
   const [authed, setAuthed] = useState(() => !!auth.get())
   /** View muon vao sau khi dang nhap xong */
   const [pendingView, setPendingView] = useState<View | null>(null)
@@ -80,7 +82,7 @@ export default function App() {
     await api.logout()
     setAuthed(false)
     setAdvisorRec(null)
-    setView('form')
+    setView('chat')
   }
 
   /** Xu ly token het han giua phien: quay lai man dang nhap thay vi bao loi kho hieu. */
@@ -144,8 +146,12 @@ export default function App() {
           setPendingView('dashboard')
         }} />}
 
+        {!needsLogin && view === 'chat' && (
+          <ChatDiscovery onDone={submitSme} submitting={submitting} serverError={error} />
+        )}
+
         {!needsLogin && view === 'result' && rec && (
-          <Recommendation rec={rec} onRestart={() => navigate('form')} />
+          <Recommendation rec={rec} onRestart={() => navigate('chat')} />
         )}
 
         {!needsLogin && view === 'advisorResult' && advisorRec && (

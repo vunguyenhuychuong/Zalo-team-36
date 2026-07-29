@@ -11,7 +11,8 @@ import { analyze } from './scoring.js'
 import { addLead, listLeads, load, reset, setOpeningLine, toLead, transition } from './store.js'
 import { HUMAN_STATUSES, TRANSITIONS } from './leadStatus.js'
 import { generateOpeningLine } from './openingLine.js'
-import { isConfigured as llmConfigured, modelName } from './llm.js'
+import { LlmError, isConfigured as llmConfigured, modelName } from './llm.js'
+import { extract, reply, systemPromptInfo } from './chat.js'
 import { login, logout, requireInternal, sessionCount, usingDefaultPassword } from './auth.js'
 
 /**
@@ -215,6 +216,53 @@ app.post('/api/analyze', (req, res) => {
   }
 })
 
+/* ---------------------------------------------------------------------
+   Luong chat tu van — cua truoc dang hoi thoai, cong khai nhu man SME.
+
+   Phan cong: LLM hoi chuyen va trich xuat, CODE quyet dinh du chua va cham diem.
+   LLM khong bao gio tu ket luan khach la SQL candidate.
+   --------------------------------------------------------------------- */
+
+/** Mot luot hoi thoai. */
+app.post('/api/chat', async (req, res) => {
+  const { messages } = req.body ?? {}
+  if (!Array.isArray(messages) || messages.length === 0) {
+    return fail(res, 400, 'Cần mảng `messages` với ít nhất một tin nhắn.')
+  }
+  if (messages.length > 60) return fail(res, 400, 'Hội thoại quá dài.')
+
+  try {
+    const r = await reply(messages)
+    return ok(res, r)
+  } catch (e) {
+    if (e instanceof LlmError) {
+      console.warn('[chat] LLM lỗi:', e.message)
+      return fail(res, 503, 'Trợ lý đang không phản hồi được. Thử lại sau ít giây giúp mình nhé.')
+    }
+    console.error('[chat] lỗi:', e)
+    return fail(res, 500, 'Có lỗi khi xử lý hội thoại.')
+  }
+})
+
+/**
+ * Trich xuat thong tin da thu duoc tu hoi thoai.
+ *
+ * Tra ve { collected, missing, ready }. Client dung `missing` de biet con thieu
+ * gi, va CHI khi ready moi cho bam xem ket qua. Viec quyet dinh "du chua" nam o
+ * code (danh sach REQUIRED trong chat.js), khong de LLM tu phan xu.
+ */
+app.post('/api/chat/extract', async (req, res) => {
+  const { messages } = req.body ?? {}
+  if (!Array.isArray(messages)) return fail(res, 400, 'Cần mảng `messages`.')
+
+  try {
+    return ok(res, await extract(messages))
+  } catch (e) {
+    console.error('[chat/extract] lỗi:', e)
+    return fail(res, 500, 'Không rút được thông tin từ hội thoại.')
+  }
+})
+
 /**
  * Cung engine, nhung danh cho nhan su Zalo nhap ho khach (man /advisor).
  *
@@ -340,11 +388,16 @@ const server = app.listen(PORT, HOST, () => {
   else console.log('  Chưa có client/dist — chạy `npm run build` nếu muốn server phục vụ web luôn')
   console.log(`  Bind              ->  ${HOST}:${PORT}${HOST === '127.0.0.1' ? ' (chỉ trong máy)' : ' (mở ra ngoài)'}`)
   console.log(`  Đã nạp ${listLeads().length} lead`)
+  const p = systemPromptInfo()
   console.log(
     llmConfigured()
-      ? `  LLM               ->  ${modelName()} (chỉ dùng cho câu mở đầu bàn giao)`
-      : '  LLM               ->  chưa cấu hình FPT_API_KEY, câu mở đầu sẽ dùng mẫu dựng sẵn',
+      ? `  LLM               ->  ${modelName()}` +
+          (p ? ` · prompt chat ${(p.bytes / 1024).toFixed(1)} KB` : ' · CHƯA có prompt chat')
+      : '  LLM               ->  chưa cấu hình FPT_API_KEY, câu mở đầu dùng mẫu dựng sẵn',
   )
+  if (llmConfigured() && !p) {
+    console.log('    ⚠ Thiếu prompts/bot-prompt-full.txt — chạy: node scripts/build-bot-prompt.mjs')
+  }
   if (usingDefaultPassword) {
     console.log('  ⚠ Khu vực nội bộ đang dùng mật khẩu mặc định.')
     console.log('    Đặt INTERNAL_PASSWORD trong .env để đổi.')

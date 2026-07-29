@@ -68,6 +68,9 @@ trap 'rm -rf "$TMP"' EXIT
 mkdir -p "$TMP/pkg/client"
 cp -r "$ROOT/server"        "$TMP/pkg/server"
 cp -r "$ROOT/client/dist"   "$TMP/pkg/client/dist"
+# prompts/ la BAT BUOC: luong chat doc bot-prompt-full.txt tu day. Thieu no thi
+# /api/chat tra 500 va startup log bao "CHUA co prompt chat".
+cp -r "$ROOT/prompts"       "$TMP/pkg/prompts"
 rm -rf "$TMP/pkg/server/node_modules" "$TMP/pkg/server/data"
 # KHONG gui package.json goc: no khai workspaces ["client","server"] ma tren VPS
 # client/ chi co dist (khong co package.json) => npm install o root se vo.
